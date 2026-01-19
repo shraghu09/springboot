@@ -1,27 +1,33 @@
 package com.example.webapp.service;
 
-import com.example.webapp.model.User;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.example.webapp.model.User;
+import com.example.webapp.repository.UserRepository;
 
 @Service
 public class UserService {
-    private final Map<String, User> users = new HashMap<>();
 
-    public String register(User user) {
-        if (users.containsKey(user.getEmail())) {
-            return "User already exists!";
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public boolean register(User user) {
+        Optional<User> existing = userRepository.findByEmail(user.getEmail());
+        if (existing.isPresent()) {
+            return false;
         }
-        users.put(user.getEmail(), user);
-        return "Registered Successfully!";
+        userRepository.save(user);
+        return true;
     }
 
     public User login(String email, String password) {
-        User user = users.get(email);
-        if (user != null && user.getPassword().equals(password)) {
-            return user;
+        Optional<User> existing = userRepository.findByEmail(email);
+
+        if (existing.isPresent() && existing.get().getPassword().equals(password)) {
+            return existing.get();
         }
         return null;
     }
