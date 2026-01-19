@@ -2,12 +2,9 @@ package com.example.webapp.controller;
 
 import com.example.webapp.model.User;
 import com.example.webapp.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class AuthController {
@@ -24,18 +21,18 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String doLogin(@RequestParam String email,
-                          @RequestParam String password,
-                          HttpSession session,
-                          Model model) {
+    public String login(@RequestParam String email,
+                        @RequestParam String password,
+                        Model model) {
+
         User user = userService.login(email, password);
-        if (user == null) {
+
+        if (user != null) {
+            return "redirect:/home";
+        } else {
             model.addAttribute("error", "Invalid Email or Password!");
             return "login";
         }
-
-        session.setAttribute("loggedInUser", user);
-        return "redirect:/home";
     }
 
     @GetMapping("/register")
@@ -44,18 +41,26 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String doRegister(@RequestParam String name,
-                             @RequestParam String email,
-                             @RequestParam String password,
-                             Model model) {
-        String msg = userService.register(new User(name, email, password));
-        model.addAttribute("message", msg);
+    public String register(@ModelAttribute User user, Model model) {
+
+        boolean success = userService.register(user);
+
+        if (success) {
+            model.addAttribute("msg", "Registered Successfully!");
+        } else {
+            model.addAttribute("msg", "Email already exists!");
+        }
+
         return "register";
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/login";
+    @GetMapping("/home")
+    public String homePage() {
+        return "home";
+    }
+
+    @GetMapping("/help")
+    public String helpPage() {
+        return "help";
     }
 }
