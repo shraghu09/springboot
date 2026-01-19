@@ -7,12 +7,14 @@ on:
       - "springboot-web-app/**"
       - ".github/workflows/deploy-ui.yml"
 
+  workflow_dispatch:
+
 jobs:
   deploy-ui:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -34,7 +36,7 @@ jobs:
           source: "springboot-web-app/target/*.jar"
           target: "/home/ubuntu/apps/ui"
 
-      - name: Restart UI App
+      - name: Restart UI App in EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
