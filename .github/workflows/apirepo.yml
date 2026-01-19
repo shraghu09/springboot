@@ -36,21 +36,15 @@ jobs:
           source: "java-api/target/*.jar"
           target: "/home/ubuntu/apps/api"
 
-      - name: Restart API App in EC2
+      - name: Restart API Service in EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            pkill -f "app-api.jar" || true
             cd /home/ubuntu/apps/api
-
             rm -f app-api.jar
             mv java-api/target/*.jar app-api.jar
-
-            # Detach completely (fixes exit 143)
-            setsid nohup java -jar app-api.jar > api.log 2>&1 < /dev/null &
-
-            sleep 2
-            ps -ef | grep app-api.jar | grep -v grep
+            sudo systemctl restart apiapp
+            sudo systemctl status apiapp --no-pager
