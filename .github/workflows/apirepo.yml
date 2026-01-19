@@ -27,7 +27,7 @@ jobs:
         working-directory: java-api
         run: mvn clean package -DskipTests
 
-      - name: Copy API Jar to EC2
+      - name: Copy API Jar to EC2 as app.jar
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -43,5 +43,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            pkill -f "java-api" || true
-            nohup java -jar /home/ubuntu/apps/api/java-api/target/*.jar > /home/ubuntu/apps/api/api.log 2>&1 &
+            sudo pkill -f "app-api.jar" || true
+            cd /home/ubuntu/apps/api
+            sudo rm -f app-api.jar
+            sudo mv java-api/target/*.jar app-api.jar
+            nohup java -jar app-api.jar > api.log 2>&1 < /dev/null &
+            exit 0
