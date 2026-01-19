@@ -27,7 +27,7 @@ jobs:
         working-directory: springboot-web-app
         run: mvn clean package -DskipTests
 
-      - name: Copy UI Jar to EC2 as app.jar
+      - name: Copy UI Jar to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -43,9 +43,14 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo pkill -f "app-ui.jar" || true
+            pkill -f "app-ui.jar" || true
             cd /home/ubuntu/apps/ui
-            sudo rm -f app-ui.jar
-            sudo mv springboot-web-app/target/*.jar app-ui.jar
-            nohup java -jar app-ui.jar > ui.log 2>&1 < /dev/null &
-            exit 0
+
+            rm -f app-ui.jar
+            mv springboot-web-app/target/*.jar app-ui.jar
+
+            # Detach completely (fixes exit 143)
+            setsid nohup java -jar app-ui.jar > ui.log 2>&1 < /dev/null &
+
+            sleep 2
+            ps -ef | grep app-ui.jar | grep -v grep
